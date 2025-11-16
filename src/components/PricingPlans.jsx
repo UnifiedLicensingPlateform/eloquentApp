@@ -48,6 +48,7 @@ const plans = [
     price: '$29',
     period: 'month',
     description: 'For coaches and organizations',
+    comingSoon: true,
     features: [
       'Everything in Pro',
       '🎭 Advanced EI team analytics',
@@ -61,7 +62,7 @@ const plans = [
       'Dedicated support'
     ],
     limitations: [],
-    cta: 'Contact Sales',
+    cta: 'Coming Soon',
     popular: false
   }
 ]
@@ -133,12 +134,16 @@ export default function PricingPlans({ currentPlan = 'free' }) {
     }
   }
 
-  const handlePlanSelect = (planName) => {
+  const handlePlanSelect = (planName, plan) => {
     if (planName === 'Free') {
       return
     }
 
     if (planName === 'Team') {
+      if (plan.comingSoon) {
+        alert('Team plan is coming soon! We\'ll notify you when it\'s available.')
+        return
+      }
       window.open('mailto:sales@eloquent-app.com?subject=Team Plan Inquiry', '_blank')
       return
     }
@@ -165,12 +170,21 @@ export default function PricingPlans({ currentPlan = 'free' }) {
           <div
             key={plan.name}
             className={`relative bg-white rounded-lg shadow-sm border-2 p-8 ${
-              plan.popular 
+              plan.comingSoon 
+                ? 'border-gray-300 opacity-75' 
+                : plan.popular 
                 ? 'border-blue-500 ring-2 ring-blue-200' 
                 : 'border-gray-200'
             }`}
           >
-            {plan.popular && (
+            {plan.comingSoon && (
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-orange-500 text-white px-4 py-1 rounded-full text-sm font-medium">
+                  Coming Soon
+                </span>
+              </div>
+            )}
+            {plan.popular && !plan.comingSoon && (
               <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                 <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-medium">
                   Most Popular
@@ -218,17 +232,21 @@ export default function PricingPlans({ currentPlan = 'free' }) {
             </div>
 
             <button
-              onClick={() => handlePlanSelect(plan.name)}
+              onClick={() => handlePlanSelect(plan.name, plan)}
               className={`w-full py-3 px-4 rounded-md font-medium transition-colors ${
-                plan.popular
+                plan.comingSoon
+                  ? 'bg-orange-100 text-orange-700 cursor-not-allowed'
+                  : plan.popular
                   ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : currentPlan.toLowerCase() === plan.name.toLowerCase()
                   ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                   : 'bg-gray-900 text-white hover:bg-gray-800'
               }`}
-              disabled={currentPlan.toLowerCase() === plan.name.toLowerCase() || (plan.name === 'Pro' && isUpgrading)}
+              disabled={plan.comingSoon || currentPlan.toLowerCase() === plan.name.toLowerCase() || (plan.name === 'Pro' && isUpgrading)}
             >
-              {currentPlan.toLowerCase() === plan.name.toLowerCase()
+              {plan.comingSoon
+                ? 'Coming Soon'
+                : currentPlan.toLowerCase() === plan.name.toLowerCase()
                 ? 'Current Plan'
                 : plan.name === 'Pro' && isUpgrading
                 ? 'Upgrading...'
@@ -237,6 +255,25 @@ export default function PricingPlans({ currentPlan = 'free' }) {
             </button>
           </div>
         ))}
+      </div>
+
+      {/* Team Plan Notification */}
+      <div className="mt-8 bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-6 text-center">
+        <h3 className="text-lg font-semibold text-orange-900 mb-2">🚀 Team Plan Coming Soon!</h3>
+        <p className="text-orange-800 mb-4">
+          Get notified when our Team plan launches with advanced team analytics, member management, and collaboration features.
+        </p>
+        <div className="flex justify-center items-center space-x-2 max-w-md mx-auto">
+          <input
+            type="email"
+            placeholder="Enter your email for early access"
+            className="flex-1 px-4 py-2 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          />
+          <button className="px-6 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors">
+            Notify Me
+          </button>
+        </div>
+        <p className="text-xs text-orange-600 mt-2">Expected launch: Q1 2024</p>
       </div>
 
       <div className="mt-12 text-center">

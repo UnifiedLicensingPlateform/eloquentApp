@@ -155,7 +155,10 @@ function AppContent() {
       <main className="pb-20 lg:pb-0">
         <div className="animate-slide-up">
           {currentView === 'dashboard' && (
-            <Dashboard onStartFirstSession={() => setCurrentView('practice')} />
+            <Dashboard 
+              onStartFirstSession={() => setCurrentView('practice')} 
+              setCurrentView={setCurrentView}
+            />
           )}
           {currentView === 'practice' && <PracticeDrill />}
           {currentView === 'pricing' && (

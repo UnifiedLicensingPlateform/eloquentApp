@@ -10,6 +10,7 @@ import SubscriptionManager from './components/SubscriptionManager'
 import AdvancedAnalytics from './components/AdvancedAnalytics'
 import SmartTextAssistant from './components/SmartTextAssistant'
 import EmotionalIntelligenceDashboard from './components/EmotionalIntelligenceDashboard'
+import SuccessPage from './components/SuccessPage'
 import LanguageSelector from './components/LanguageSelector'
 
 function AppContent() {
@@ -18,6 +19,14 @@ function AppContent() {
   const [loading, setLoading] = useState(true)
   const [userSubscription, setUserSubscription] = useState(null)
   const { t, isRTL } = useLanguage()
+
+  // Check for success page
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    if (urlParams.get('session_id')) {
+      setCurrentView('success')
+    }
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -167,6 +176,7 @@ function AppContent() {
           {currentView === 'billing' && <SubscriptionManager />}
           {currentView === 'textassistant' && <SmartTextAssistant />}
           {currentView === 'emotional' && <EmotionalIntelligenceDashboard />}
+          {currentView === 'success' && <SuccessPage />}
         </div>
       </main>
     </div>

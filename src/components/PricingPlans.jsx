@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Check, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { createCheckoutSession, STRIPE_PRICES } from '../services/stripeService'
 
 const plans = [
   {
@@ -83,52 +84,14 @@ export default function PricingPlans({ currentPlan = 'free' }) {
         return
       }
 
-      console.log('Attempting to upgrade user:', user.id)
+      console.log('Redirecting to Stripe checkout for user:', user.id)
 
-      // Try insert first, then update if exists
-      const { data, error } = await supabase
-        .from('user_subscriptions')
-        .insert({
-          user_id: user.id,
-          plan_name: 'pro',
-          status: 'active',
-          cancel_at_period_end: false
-        })
-        .select()
-        .single()
-
-      if (error) {
-        console.error('Insert failed, trying update:', error)
-        
-        // If insert fails, try update
-        const { data: updateData, error: updateError } = await supabase
-          .from('user_subscriptions')
-          .update({
-            plan_name: 'pro',
-            status: 'active',
-            cancel_at_period_end: false
-          })
-          .eq('user_id', user.id)
-          .select()
-          .single()
-
-        if (updateError) {
-          console.error('Update also failed:', updateError)
-          alert(`Failed to upgrade: ${updateError.message}. Check console for details.`)
-          return
-        }
-
-        console.log('Update successful:', updateData)
-      } else {
-        console.log('Insert successful:', data)
-      }
-
-      alert('You are now on the Pro plan!')
-      window.location.reload()
+      // Redirect to Stripe Checkout
+      await createCheckoutSession(STRIPE_PRICES.pro_monthly, user.id)
 
     } catch (error) {
-      console.error('Unexpected error upgrading to Pro:', error)
-      alert(`Unexpected error: ${error.message}. Check console for details.`)
+      console.error('Payment error:', error)
+      alert('Payment failed. Please try again or contact support.')
     } finally {
       setIsUpgrading(false)
     }

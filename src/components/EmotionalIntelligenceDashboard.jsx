@@ -8,6 +8,7 @@ export default function EmotionalIntelligenceDashboard() {
   const [emotionalData, setEmotionalData] = useState([])
   const [loading, setLoading] = useState(true)
   const [overallStats, setOverallStats] = useState(null)
+  const [isUsingFallbackData, setIsUsingFallbackData] = useState(false)
   const { usage } = useUsageTracking()
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export default function EmotionalIntelligenceDashboard() {
 
       if (eiSessions && eiSessions.length > 0) {
         // Use real EI data
+        setIsUsingFallbackData(false)
         emotionalSessions = eiSessions.map(session => ({
           id: session.id,
           date: new Date(session.created_at).toLocaleDateString(),
@@ -47,6 +49,7 @@ export default function EmotionalIntelligenceDashboard() {
         }))
       } else {
         // Fallback: simulate data from practice sessions for users without EI data yet
+        setIsUsingFallbackData(true)
         const { data: sessions, error } = await supabase
           .from('practice_sessions')
           .select('*')
@@ -246,6 +249,32 @@ export default function EmotionalIntelligenceDashboard() {
       <div className="mb-8 animate-fadeInDown">
         <h1 className="text-3xl font-bold gradient-text mb-2">🎭 Emotional Intelligence Dashboard</h1>
         <p className="text-gray-600 text-lg">Track your confidence, energy, and emotional presence</p>
+        
+        {/* Data Source Indicator */}
+        {isUsingFallbackData && (
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+              <span className="text-yellow-800 text-sm font-medium">
+                📊 Showing simulated data based on your practice sessions
+              </span>
+            </div>
+            <p className="text-yellow-700 text-xs mt-1">
+              Complete practice sessions with EI coaching enabled to see real emotional intelligence analysis
+            </p>
+          </div>
+        )}
+        
+        {!isUsingFallbackData && emotionalData.length > 0 && (
+          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              <span className="text-green-800 text-sm font-medium">
+                ✅ Showing real emotional intelligence data from your sessions
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Key Metrics */}

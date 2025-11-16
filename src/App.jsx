@@ -46,7 +46,7 @@ function AppContent() {
         .from('user_subscriptions')
         .select('*')
         .eq('user_id', userId)
-        .single()
+        .maybeSingle()
       
       setUserSubscription(data)
     } catch (error) {
@@ -154,7 +154,9 @@ function AppContent() {
       {/* Main Content */}
       <main className="pb-20 lg:pb-0">
         <div className="animate-slide-up">
-          {currentView === 'dashboard' && <Dashboard />}
+          {currentView === 'dashboard' && (
+            <Dashboard onStartFirstSession={() => setCurrentView('practice')} />
+          )}
           {currentView === 'practice' && <PracticeDrill />}
           {currentView === 'pricing' && (
             <PricingPlans currentPlan={userSubscription?.plan_name || 'free'} />

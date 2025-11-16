@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { MessageSquare, Wand2, Copy, Check, AlertCircle, Sparkles } from 'lucide-react'
+import { MessageSquare, Wand2, Copy, Check, AlertCircle, Sparkles, Mic, MicOff, Volume2 } from 'lucide-react'
 import { geminiService } from '../services/geminiService'
 import { detectWordRepetition } from '../utils/speechAnalysis'
 import { useLanguage } from '../hooks/useLanguage.jsx'
@@ -12,9 +12,74 @@ export default function SmartTextAssistant() {
   const [isImproving, setIsImproving] = useState(false)
   const [copied, setCopied] = useState(false)
   const [realTimeAnalysis, setRealTimeAnalysis] = useState(null)
+  
+  // Voice dictation states
+  const [isListening, setIsListening] = useState(false)
+  const [isRecognitionSupported, setIsRecognitionSupported] = useState(false)
+  const [voiceError, setVoiceError] = useState('')
+  
   const { t, currentLanguage } = useLanguage()
   
   const debounceTimer = useRef(null)
+  const recognitionRef = useRef(null)
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      setIsRecognitionSupported(true)
+      
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+      recognitionRef.current = new SpeechRecognition()
+      
+      const recognition = recognitionRef.current
+      recognition.continuous = true
+      recognition.interimResults = true
+      recognition.lang = currentLanguage === 'en' ? 'en-US' : 
+                       currentLanguage === 'es' ? 'es-ES' :
+                       currentLanguage === 'fr' ? 'fr-FR' :
+                       currentLanguage === 'ar' ? 'ar-SA' :
+                       currentLanguage === 'ur' ? 'ur-PK' : 'en-US'
+      
+      recognition.onstart = () => {
+        setIsListening(true)
+        setVoiceError('')
+      }
+      
+      recognition.onresult = (event) => {
+        let interimTranscript = ''
+        let finalTranscript = ''
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript
+          } else {
+            interimTranscript += transcript
+          }
+        }
+        
+        if (finalTranscript) {
+          setOriginalText(prev => prev + (prev ? ' ' : '') + finalTranscript)
+        }
+      }
+      
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error)
+        setVoiceError(`Voice recognition error: ${event.error}`)
+        setIsListening(false)
+      }
+      
+      recognition.onend = () => {
+        setIsListening(false)
+      }
+    }
+    
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+    }
+  }, [currentLanguage])
 
   // Real-time analysis as user types
   useEffect(() => {
@@ -42,6 +107,53 @@ export default function SmartTextAssistant() {
   const analyzeTextRealTime = (text) => {
     const analysis = detectWordRepetition(text)
     setRealTimeAnalysis(analysis)
+  }
+
+  // Voice dictation functions
+  const startListening = () => {
+    if (recognitionRef.current && !isListening) {
+      try {
+        recognitionRef.current.start()
+      } catch (error) {
+        console.error('Error starting speech recognition:', error)
+        setVoiceError('Failed to start voice recognition')
+      }
+    }
+  }
+
+  const stopListening = () => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop()
+    }
+  }
+
+  const toggleListening = () => {
+    if (isListening) {
+      stopListening()
+    } else {
+      startListening()
+    }
+  }
+
+  // Text-to-speech for improved text
+  const speakImprovedText = () => {
+    if (!improvedText) return
+    
+    if ('speechSynthesis' in window) {
+      // Stop any ongoing speech
+      window.speechSynthesis.cancel()
+      
+      const utterance = new SpeechSynthesisUtterance(improvedText)
+      utterance.lang = currentLanguage === 'en' ? 'en-US' : 
+                      currentLanguage === 'es' ? 'es-ES' :
+                      currentLanguage === 'fr' ? 'fr-FR' :
+                      currentLanguage === 'ar' ? 'ar-SA' :
+                      currentLanguage === 'ur' ? 'ur-PK' : 'en-US'
+      utterance.rate = 0.9
+      utterance.pitch = 1
+      
+      window.speechSynthesis.speak(utterance)
+    }
   }
 
   const improveText = async () => {
@@ -145,25 +257,71 @@ export default function SmartTextAssistant() {
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">Your Text</h3>
-            {realTimeAnalysis && (
-              <div className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                severity.color === 'red' ? 'bg-red-100 text-red-800' :
-                severity.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-                severity.color === 'blue' ? 'bg-blue-100 text-blue-800' :
-                'bg-green-100 text-green-800'
-              }`}>
-                <AlertCircle className="w-3 h-3 mr-1" />
-                {severity.message}
+            <div className="flex items-center space-x-2">
+              {/* Voice Recognition Button */}
+              {isRecognitionSupported && (
+                <button
+                  onClick={toggleListening}
+                  className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                    isListening 
+                      ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
+                  title={isListening ? 'Stop dictation' : 'Start voice dictation'}
+                >
+                  {isListening ? (
+                    <>
+                      <MicOff className="w-4 h-4 mr-1" />
+                      Stop
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-4 h-4 mr-1" />
+                      Dictate
+                    </>
+                  )}
+                </button>
+              )}
+              
+              {realTimeAnalysis && (
+                <div className={`flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  severity.color === 'red' ? 'bg-red-100 text-red-800' :
+                  severity.color === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                  severity.color === 'blue' ? 'bg-blue-100 text-blue-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  {severity.message}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="relative">
+            <textarea
+              value={originalText}
+              onChange={(e) => setOriginalText(e.target.value)}
+              placeholder="Type, paste, or use voice dictation to add your text here..."
+              className={`w-full h-64 p-4 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none ${
+                isListening ? 'border-red-300 bg-red-50' : 'border-gray-300'
+              }`}
+            />
+            
+            {/* Voice Status Indicator */}
+            {isListening && (
+              <div className="absolute top-2 right-2 flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                <div className="w-2 h-2 bg-red-500 rounded-full mr-1 animate-pulse"></div>
+                Listening...
+              </div>
+            )}
+            
+            {/* Voice Error */}
+            {voiceError && (
+              <div className="absolute bottom-2 right-2 px-2 py-1 bg-red-100 text-red-700 rounded text-xs">
+                {voiceError}
               </div>
             )}
           </div>
-          
-          <textarea
-            value={originalText}
-            onChange={(e) => setOriginalText(e.target.value)}
-            placeholder="Type or paste your message, email, or any text here..."
-            className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-          />
 
           {/* Real-time Analysis */}
           {realTimeAnalysis && (
@@ -225,22 +383,32 @@ export default function SmartTextAssistant() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">Improved Text</h3>
             {improvedText && (
-              <button
-                onClick={() => copyToClipboard(improvedText)}
-                className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4 mr-1 text-green-500" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4 mr-1" />
-                    Copy
-                  </>
-                )}
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={speakImprovedText}
+                  className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                  title="Listen to improved text"
+                >
+                  <Volume2 className="w-4 h-4 mr-1" />
+                  Listen
+                </button>
+                <button
+                  onClick={() => copyToClipboard(improvedText)}
+                  className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4 mr-1 text-green-500" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4 mr-1" />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
             )}
           </div>
 
@@ -273,10 +441,23 @@ export default function SmartTextAssistant() {
         </div>
       </div>
 
+      {/* Voice Features Info */}
+      {!isRecognitionSupported && (
+        <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center">
+            <AlertCircle className="w-5 h-5 text-yellow-600 mr-2" />
+            <span className="text-yellow-800 font-medium">Voice dictation not supported</span>
+          </div>
+          <p className="text-yellow-700 text-sm mt-1">
+            Voice dictation requires a modern browser with speech recognition support (Chrome, Edge, Safari).
+          </p>
+        </div>
+      )}
+
       {/* Usage Examples */}
       <div className="mt-8 bg-white rounded-lg shadow-sm border p-6">
         <h3 className="text-lg font-medium text-gray-900 mb-4">Perfect for:</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="flex items-start">
             <MessageSquare className="w-5 h-5 text-blue-500 mr-3 mt-1" />
             <div>
@@ -298,7 +479,26 @@ export default function SmartTextAssistant() {
               <p className="text-sm text-gray-600">Professional writing with better flow</p>
             </div>
           </div>
+          <div className="flex items-start">
+            <Mic className="w-5 h-5 text-red-500 mr-3 mt-1" />
+            <div>
+              <h4 className="font-medium text-gray-900">Voice Dictation</h4>
+              <p className="text-sm text-gray-600">Speak naturally and get improved text</p>
+            </div>
+          </div>
         </div>
+        
+        {isRecognitionSupported && (
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h4 className="font-medium text-blue-900 mb-2">🎤 Voice Features:</h4>
+            <ul className="text-sm text-blue-800 space-y-1">
+              <li>• Click "Dictate" to start voice input</li>
+              <li>• Speak naturally - your words will appear in real-time</li>
+              <li>• Click "Listen" to hear your improved text read aloud</li>
+              <li>• Supports multiple languages based on your selection</li>
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -4,7 +4,7 @@ import { TrendingDown, TrendingUp, Minus, Target, Award, Calendar, Mic } from 'l
 import { supabase } from '../lib/supabase'
 import { analyzeSpeechPatterns } from '../utils/speechAnalysis'
 
-export default function Dashboard() {
+export default function Dashboard({ onStartFirstSession }) {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState(null)
@@ -94,7 +94,7 @@ export default function Dashboard() {
               Begin your journey to better communication with your first practice session.
             </p>
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => (onStartFirstSession ? onStartFirstSession() : window.location.reload())}
               className="btn-gradient inline-flex items-center space-x-2 px-6 py-3 rounded-2xl text-white font-semibold"
             >
               <Mic className="w-5 h-5" />

@@ -78,7 +78,7 @@ export function LanguageProvider({ children }) {
           .upsert({
             user_id: user.id,
             preferred_language: languageCode
-          })
+          }, { onConflict: 'user_id' })
       }
 
       // Update document direction

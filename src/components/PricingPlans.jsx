@@ -77,25 +77,49 @@ export default function PricingPlans({ currentPlan = 'free' }) {
 
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) {
+        console.error('User error:', userError)
         alert('Please sign in to upgrade to Pro.')
         return
       }
 
+      console.log('Attempting to upgrade user:', user.id)
+
+      // Try insert first, then update if exists
       const { data, error } = await supabase
         .from('user_subscriptions')
-        .upsert({
+        .insert({
           user_id: user.id,
           plan_name: 'pro',
           status: 'active',
           cancel_at_period_end: false
-        }, { onConflict: 'user_id' })
+        })
         .select()
         .single()
 
       if (error) {
-        console.error('Error upgrading to Pro:', error)
-        alert('Failed to upgrade to Pro. Please try again.')
-        return
+        console.error('Insert failed, trying update:', error)
+        
+        // If insert fails, try update
+        const { data: updateData, error: updateError } = await supabase
+          .from('user_subscriptions')
+          .update({
+            plan_name: 'pro',
+            status: 'active',
+            cancel_at_period_end: false
+          })
+          .eq('user_id', user.id)
+          .select()
+          .single()
+
+        if (updateError) {
+          console.error('Update also failed:', updateError)
+          alert(`Failed to upgrade: ${updateError.message}. Check console for details.`)
+          return
+        }
+
+        console.log('Update successful:', updateData)
+      } else {
+        console.log('Insert successful:', data)
       }
 
       alert('You are now on the Pro plan!')
@@ -103,7 +127,7 @@ export default function PricingPlans({ currentPlan = 'free' }) {
 
     } catch (error) {
       console.error('Unexpected error upgrading to Pro:', error)
-      alert('Failed to upgrade to Pro. Please try again.')
+      alert(`Unexpected error: ${error.message}. Check console for details.`)
     } finally {
       setIsUpgrading(false)
     }

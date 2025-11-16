@@ -6,6 +6,7 @@ export default function SubscriptionManager() {
   const [subscription, setSubscription] = useState(null)
   const [loading, setLoading] = useState(true)
   const [billingHistory, setBillingHistory] = useState([])
+  const [isUpgrading, setIsUpgrading] = useState(false)
 
   useEffect(() => {
     fetchSubscription()
@@ -20,7 +21,7 @@ export default function SubscriptionManager() {
         .from('user_subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
 
       if (error && error.code !== 'PGRST116') throw error
       
@@ -48,6 +49,80 @@ export default function SubscriptionManager() {
       setBillingHistory(data || [])
     } catch (error) {
       console.error('Error fetching billing history:', error)
+    }
+  }
+
+  const handleUpgradeToPro = async () => {
+    if (isUpgrading) return
+    try {
+      setIsUpgrading(true)
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
+        alert('Please sign in to upgrade to Pro.')
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('user_subscriptions')
+        .upsert({
+          user_id: user.id,
+          plan_name: 'pro',
+          status: 'active',
+          cancel_at_period_end: false
+        }, { onConflict: 'user_id' })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error upgrading to Pro:', error)
+        alert('Failed to upgrade to Pro. Please try again.')
+        return
+      }
+
+      alert('You are now on the Pro plan!')
+      await fetchSubscription()
+    } catch (e) {
+      console.error('Unexpected error upgrading to Pro:', e)
+      alert('Failed to upgrade to Pro. Please try again.')
+    } finally {
+      setIsUpgrading(false)
+    }
+  }
+
+  const handleDowngradeToFree = async () => {
+    if (isUpgrading) return
+    try {
+      setIsUpgrading(true)
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
+        alert('Please sign in to manage your plan.')
+        return
+      }
+
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .upsert({
+          user_id: user.id,
+          plan_name: 'free',
+          status: 'active',
+          cancel_at_period_end: false
+        }, { onConflict: 'user_id' })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error downgrading to Free:', error)
+        alert('Failed to downgrade. Please try again.')
+        return
+      }
+
+      alert('You have been downgraded to the Free plan.')
+      await fetchSubscription()
+    } catch (e) {
+      console.error('Unexpected error downgrading to Free:', e)
+      alert('Failed to downgrade. Please try again.')
+    } finally {
+      setIsUpgrading(false)
     }
   }
 
@@ -151,6 +226,15 @@ export default function SubscriptionManager() {
             >
               Cancel Subscription
             </button>
+            {subscription.plan_name !== 'free' && (
+              <button
+                onClick={handleDowngradeToFree}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                disabled={isUpgrading}
+              >
+                {isUpgrading ? 'Processing...' : 'Downgrade to Free'}
+              </button>
+            )}
           </div>
         )}
 
@@ -159,8 +243,27 @@ export default function SubscriptionManager() {
             <p className="text-gray-600 mb-4">
               You're currently on the free plan. Upgrade to unlock unlimited practice sessions and advanced features.
             </p>
-            <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-              Upgrade to Pro
+            <button
+              onClick={handleUpgradeToPro}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? 'Upgrading...' : 'Upgrade to Pro'}
+            </button>
+          </div>
+        )}
+
+        {subscription && subscription.plan_name === 'free' && (
+          <div className="mt-6">
+            <p className="text-gray-600 mb-4">
+              Upgrade to Pro for unlimited sessions and emotional intelligence features.
+            </p>
+            <button
+              onClick={handleUpgradeToPro}
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              disabled={isUpgrading}
+            >
+              {isUpgrading ? 'Upgrading...' : 'Upgrade to Pro'}
             </button>
           </div>
         )}

@@ -34,25 +34,18 @@ export function useUsageTracking() {
         .from('user_subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .maybeSingle()
 
       setSubscription(subData)
 
-      // Fetch plan features
+      // Derive plan features without pricing_plans query (schema may vary)
       const planName = subData?.plan_name || 'free'
-      const { data: planData } = await supabase
-        .from('pricing_plans')
-        .select('emotional_intelligence_enabled, ei_coaching_enabled, ei_analytics_enabled')
-        .eq('plan_name', planName)
-        .single()
-
-      if (planData) {
-        setPlanFeatures({
-          emotionalIntelligenceEnabled: planData.emotional_intelligence_enabled,
-          eiCoachingEnabled: planData.ei_coaching_enabled,
-          eiAnalyticsEnabled: planData.ei_analytics_enabled
-        })
+      const derivedFeatures = {
+        emotionalIntelligenceEnabled: planName !== 'free',
+        eiCoachingEnabled: planName !== 'free',
+        eiAnalyticsEnabled: planName === 'team' // team has most advanced features
       }
+      setPlanFeatures(derivedFeatures)
 
       // Fetch current month usage
       const { data: usageData } = await supabase
@@ -60,7 +53,7 @@ export function useUsageTracking() {
         .select('*')
         .eq('user_id', user.id)
         .eq('month_year', currentMonth)
-        .single()
+        .maybeSingle()
 
       // Determine limits and features based on plan
       let sessionsLimit = 5 // Free plan default

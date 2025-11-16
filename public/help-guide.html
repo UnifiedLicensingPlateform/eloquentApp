@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eloquent - How to Use Guide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .guide-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+        }
+
+        .nav-tab {
+            padding: 12px 24px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #666;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .feature-section {
+            margin-bottom: 40px;
+        }
+
+        .feature-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .step-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .step-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .step-description {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .tip-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #2196f3;
+        }
+
+        .tip-box .tip-icon {
+            color: #2196f3;
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fff3e0 0%, #fce4ec 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #ff9800;
+        }
+
+        .warning-box .warning-icon {
+            color: #ff9800;
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .feature-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .screenshot {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+
+        .back-to-app {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .back-to-app:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .keyboard-shortcut {
+            background: #f1f3f4;
+            border: 1px solid #dadce0;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin: 0 4px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .guide-content {
+                padding: 20px;
+            }
+            
+            .nav-tabs {
+                justify-content: center;
+            }
+            
+            .feature-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-to-app">
+        <i class="fas fa-arrow-left"></i> Back to App
+    </a>
+
+    <div class="container">
+        <div class="header">
+            <h1>✨ Eloquent Help Guide</h1>
+            <p>Master your communication skills with our comprehensive guide</p>
+        </div>
+
+        <div class="guide-content">
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="showTab('getting-started')">🚀 Getting Started</button>
+                <button class="nav-tab" onclick="showTab('speech-practice')">🎤 Speech Practice</button>
+                <button class="nav-tab" onclick="showTab('text-assistant')">✨ Text Assistant</button>
+                <button class="nav-tab" onclick="showTab('dashboard')">📊 Dashboard</button>
+                <button class="nav-tab" onclick="showTab('languages')">🌍 Languages</button>
+                <button class="nav-tab" onclick="showTab('pricing')">💎 Pricing</button>
+                <button class="nav-tab" onclick="showTab('troubleshooting')">🔧 Troubleshooting</button>
+            </div>
+
+            <!-- Getting Started Tab -->
+            <div id="getting-started" class="tab-content active">
+                <div class="feature-section">
+                    <div class="feature-title">
+                        <div class="feature-icon">🚀</div>
+                        Welcome to Eloquent!
+                    </div>
+                    
+                    <p style="font-size: 1.1rem; margin-bottom: 30px; color: #666;">
+                        Eloquent is your AI-powered communication coach that helps you improve both speech and writing skills. 
+                        Let's get you started on your journey to better communication!
+                    </p>
+
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Create Your Account</div>
+                        <div class="step-description">
+                            Sign up with your email address to get started. You'll get 5 free practice sessions per month 
+                            and 10 text improvements per day on our free plan.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Choose Your Language</div>
+                        <div class="step-description">
+                            Select your preferred language from 10+ supported languages including English, Urdu, Arabic, 
+                            Spanish, French, German, Hindi, Chinese, Japanese, and Korean.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Start Practicing</div>
+                        <div class="step-description">
+                            Begin with either speech practice or text improvement. Both features work together to 
+                            enhance your overall communication skills.
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <i class="fas fa-lightbulb tip-icon"></i>
+                        <strong>Pro Tip:</strong> Use both speech practice and text assistant features together for 
+                        maximum improvement. They complement each other perfectly!
+                    </div>
+                </div>
+            </div>
+
+            <!-- Speech Practice Tab -->
+            <div id="speech-practice" class="tab-content">
+                <div class="feature-section">
+                    <div class="feature-title">
+                        <div class="feature-icon">🎤</div>
+                        Speech Practice Guide
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Start a Practice Session</div>
+                        <div class="step-description">
+                            Click on "Practice" in the navigation menu, then click "Start 60-Second Drill" to begin your session.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Allow Microphone Access</div>
+                        <div class="step-description">
+                            Your browser will ask for microphone permission. Click "Allow" to enable speech recognition.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Speak Naturally</div>
+                        <div class="step-description">
+                            Talk about any topic for 60 seconds. You'll see your words appear in real-time as you speak.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Review Your Results</div>
+                        <div class="step-description">
+                            After the session, you'll see your fluency score, repetition rate, and most repeated words.
+                        </div>
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h3>📈 Fluency Score</h3>
+                            <p>A score from 0-100 based on your speech patterns. Higher scores indicate better fluency with less repetition.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🔄 Repetition Rate</h3>
+                            <p>Percentage of words that are repeated. Lower percentages show more varied vocabulary usage.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>📝 Word Analysis</h3>
+                            <p>See which words you repeat most often and get suggestions for alternatives.</p>
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <i class="fas fa-exclamation-triangle warning-icon"></i>
+                        <strong>Browser Compatibility:</strong> Speech recognition works best in Chrome, Edge, and Safari. 
+                        Firefox is not currently supported.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Text Assistant Tab -->
+            <div id="text-assistant" class="tab-content">
+                <div class="feature-section">
+                    <div class="feature-title">
+                        <div class="feature-icon">✨</div>
+                        Smart Text Assistant
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Access Text Assistant</div>
+                        <div class="step-description">
+                            Click on "Text Assistant" in the navigation menu to open the text improvement tool.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Type or Paste Your Text</div>
+                        <div class="step-description">
+                            Enter your text in the input area. You'll see real-time analysis as you type, including repetition warnings.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Get AI Improvements</div>
+                        <div class="step-description">
+                            Click "Improve Text" to get AI-powered suggestions that reduce repetition and enhance vocabulary.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Copy Improved Text</div>
+                        <div class="step-description">
+                            Use the "Copy" button to copy the improved text and use it in your emails, documents, or social media.
+                        </div>
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h3>⚡ Real-time Analysis</h3>
+                            <p>See repetition warnings as you type, with color-coded indicators for different severity levels.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🤖 AI-Powered</h3>
+                            <p>Uses Google's Gemini AI to provide natural, context-aware text improvements.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🌍 Multi-Language</h3>
+                            <p>Works with all supported languages, providing culturally appropriate improvements.</p>
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <i class="fas fa-lightbulb tip-icon"></i>
+                        <strong>Perfect For:</strong> Emails, social media posts, documents, reports, and any written communication 
+                        where you want to sound more professional and engaging.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content">
+                <div class="feature-section">
+                    <div class="feature-title">
+                        <div class="feature-icon">📊</div>
+                        Understanding Your Dashboard
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h3>📅 Total Sessions</h3>
+                            <p>Track how many practice sessions you've completed. Consistency is key to improvement!</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🏆 Latest Fluency Score</h3>
+                            <p>Your most recent fluency score. Watch this number improve over time with regular practice.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>📈 Average Repetition Rate</h3>
+                            <p>Your average repetition rate across all sessions. Lower is better!</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>📊 Trend Analysis</h3>
+                            <p>See if you're improving, stable, or need more work. Our AI analyzes your progress patterns.</p>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">📈</div>
+                        <div class="step-title">Progress Charts</div>
+                        <div class="step-description">
+                            View your fluency scores and repetition rates over time with interactive charts. 
+                            Identify patterns and track your improvement journey.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">📋</div>
+                        <div class="step-title">Session History</div>
+                        <div class="step-description">
+                            Review detailed information about your past sessions, including dates, word counts, 
+                            and performance metrics.
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <i class="fas fa-lightbulb tip-icon"></i>
+                        <strong>Tracking Tip:</strong> Practice regularly to see meaningful trends. Even 2-3 sessions 
+                        per week can show significant improvement over time.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Languages Tab -->
+            <div id="languages" class="tab-content">
+                <div class="feature-section">
+                    <div class="feature-title">
+                        <div class="feature-icon">🌍</div>
+                        Multi-Language Support
+                    </div>
+
+                    <p style="font-size: 1.1rem; margin-bottom: 30px; color: #666;">
+                        Eloquent supports 10+ languages with full speech recognition and AI analysis capabilities.
+                    </p>
+
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h3>🇺🇸 English</h3>
+                            <p>Full support with advanced AI analysis and speech recognition.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🇵🇰 Urdu (اردو)</h3>
+                            <p>Right-to-left text support with cultural context awareness.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🇸🇦 Arabic (العربية)</h3>
+                            <p>RTL support with region-specific dialect understanding.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🇪🇸 Spanish (Español)</h3>
+                            <p>Support for multiple Spanish variants and regional expressions.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🇫🇷 French (Français)</h3>
+                            <p>Comprehensive French language support with formal/informal context.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h3>🇩🇪 German (Deutsch)</h3>
+                            <p>Advanced German grammar and compound word analysis.</p>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">🔄</div>
+                        <div class="step-title">Switching Languages</div>
+                        <div class="step-description">
+                            Click the globe icon in the navigation bar to switch languages. The entire interface 
+                            will adapt to your selected language, including right-to-left text for Arabic and Urdu.
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <i class="fas fa-lightbulb tip-icon"></i>
+                        <strong>Language Tip:</strong> Your language preference is saved to your account and will 
+                        be remembered across all your devices.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Tab -->
+            <div id="pricing" class="tab-content">
+                <div class="feature-section">
+                    <div class="feature-title">
+                        <div class="feature-icon">💎</div>
+                        Pricing Plans & Features
+                    </div>
+
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <h3>🆓 Free Plan</h3>
+                            <p><strong>$0/month</strong></p>
+                            <ul style="margin-top: 15px; padding-left: 20px; color: #666;">
+                                <li>5 speech sessions per month</li>
+                                <li>10 text improvements per day</li>
+                                <li>Basic progress tracking</li>
+                                <li>All languages supported</li>
+                            </ul>
+                        </div>
+                        <div class="feature-card">
+                            <h3>⭐ Pro Plan</h3>
+                            <p><strong>$9.99/month</strong></p>
+                            <ul style="margin-top: 15px; padding-left: 20px; color: #666;">
+                                <li>Unlimited speech sessions</li>
+                                <li>Unlimited text improvements</li>
+                                <li>AI-powered insights</li>
+                                <li>Advanced analytics</li>
+                                <li>Progress export (PDF/CSV)</li>
+                                <li>Custom practice topics</li>
+                            </ul>
+                        </div>
+                        <div class="feature-card">
+                            <h3>👥 Team Plan</h3>
+                            <p><strong>$29.99/month</strong></p>
+                            <ul style="margin-top: 15px; padding-left: 20px; color: #666;">
+                                <li>Everything in Pro</li>
+                                <li>Up to 10 team members</li>
+                                <li>Team progress dashboard</li>
+                                <li>Bulk user management</li>
+                                <li>API access</li>
+                                <li>Priority support</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="tip-box">
+                        <i class="fas fa-lightbulb tip-icon"></i>
+                        <strong>Upgrade Anytime:</strong> Start with the free plan and upgrade when you need more features. 
+                        All your progress and data will be preserved.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting Tab -->
+            <div id="troubleshooting" class="tab-content">
+                <div class="feature-section">
+                    <div class="feature-title">
+                        <div class="feature-icon">🔧</div>
+                        Troubleshooting & FAQ
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">❓</div>
+                        <div class="step-title">Speech Recognition Not Working?</div>
+                        <div class="step-description">
+                            <strong>Solution:</strong> Make sure you're using Chrome, Edge, or Safari. Check that microphone 
+                            permissions are enabled for the website. Firefox is not currently supported.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">❓</div>
+                        <div class="step-title">Text Not Being Recognized?</div>
+                        <div class="step-description">
+                            <strong>Solution:</strong> Speak clearly and at a normal pace. Ensure you're in a quiet environment 
+                            with minimal background noise. Check your microphone settings.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">❓</div>
+                        <div class="step-title">AI Improvements Not Working?</div>
+                        <div class="step-description">
+                            <strong>Solution:</strong> This feature requires a Gemini API key. Pro users get this automatically. 
+                            Free users can add their own API key in settings.
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <div class="step-number">❓</div>
+                        <div class="step-title">Reached Monthly Limit?</div>
+                        <div class="step-description">
+                            <strong>Solution:</strong> Free users have monthly limits. Upgrade to Pro for unlimited access, 
+                            or wait until next month for your limits to reset.
+                        </div>
+                    </div>
+
+                    <div class="warning-box">
+                        <i class="fas fa-exclamation-triangle warning-icon"></i>
+                        <strong>Still Need Help?</strong> Contact our support team at support@eloquent-app.com or 
+                        use the chat widget in the bottom-right corner of the app.
+                    </div>
+
+                    <div class="tip-box">
+                        <i class="fas fa-lightbulb tip-icon"></i>
+                        <strong>Keyboard Shortcuts:</strong> 
+                        <span class="keyboard-shortcut">Space</span> to start/stop recording, 
+                        <span class="keyboard-shortcut">Ctrl+Enter</span> to improve text,
+                        <span class="keyboard-shortcut">Ctrl+C</span> to copy improved text.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tab contents
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Remove active class from all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        // Add smooth scrolling for better UX
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers for smooth scrolling
+            const links = document.querySelectorAll('a[href^="#"]');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Add animation on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+
+            // Observe all step cards
+            const stepCards = document.querySelectorAll('.step-card, .feature-card');
+            stepCards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+        });
+    </script>
+</body>
+</html>

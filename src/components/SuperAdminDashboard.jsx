@@ -22,6 +22,15 @@ export default function SuperAdminDashboard() {
   const [languages, setLanguages] = useState([])
   const [editingPlan, setEditingPlan] = useState(null)
   const [editingLanguage, setEditingLanguage] = useState(null)
+  const [platformSettings, setPlatformSettings] = useState({
+    stripe_publishable_key: '',
+    stripe_secret_key: '',
+    gemini_api_key: ''
+  })
+  const [newAdminEmail, setNewAdminEmail] = useState('')
+  const [adminUsers, setAdminUsers] = useState([])
+  const [savingSettings, setSavingSettings] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
 
   useEffect(() => {
     checkAdminAccess()
@@ -48,7 +57,9 @@ export default function SuperAdminDashboard() {
         fetchUsers(),
         fetchSubscriptions(),
         fetchPricingPlans(),
-        fetchLanguages()
+        fetchLanguages(),
+        fetchPlatformSettings(),
+        fetchAdminUsers()
       ])
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
@@ -217,6 +228,256 @@ export default function SuperAdminDashboard() {
       await fetchLanguages()
     } catch (error) {
       console.error('Error toggling language status:', error)
+    }
+  }
+
+  const fetchPlatformSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('platform_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', ['stripe_publishable_key', 'stripe_secret_key', 'gemini_api_key'])
+
+      if (error) throw error
+      
+      const settings = {}
+      data?.forEach(setting => {
+        settings[setting.setting_key] = setting.setting_value || ''
+      })
+      
+      setPlatformSettings(prev => ({ ...prev, ...settings }))
+    } catch (error) {
+      console.error('Error fetching platform settings:', error)
+    }
+  }
+
+  const fetchAdminUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+      setAdminUsers(data || [])
+    } catch (error) {
+      console.error('Error fetching admin users:', error)
+    }
+  }
+
+  const savePlatformSetting = async (key, value) => {
+    setSavingSettings(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      // Check if setting exists
+      const { data: existing } = await supabase
+        .from('platform_settings')
+        .select('id')
+        .eq('setting_key', key)
+        .single()
+
+      if (existing) {
+        // Update existing
+        const { error } = await supabase
+          .from('platform_settings')
+          .update({ 
+            setting_value: value,
+            updated_by: user.id,
+            updated_at: new Date().toISOString()
+          })
+          .eq('setting_key', key)
+
+        if (error) throw error
+      } else {
+        // Insert new
+        const { error } = await supabase
+          .from('platform_settings')
+          .insert({ 
+            setting_key: key,
+            setting_value: value,
+            updated_by: user.id
+          })
+
+        if (error) throw error
+      }
+
+      alert(`${key} updated successfully! Note: You may need to restart the application for changes to take effect.`)
+      await fetchPlatformSettings()
+    } catch (error) {
+      console.error('Error saving platform setting:', error)
+      alert('Failed to save setting. Please check console for details.')
+    } finally {
+      setSavingSettings(false)
+    }
+  }
+
+  const saveStripeConfig = async () => {
+    await Promise.all([
+      savePlatformSetting('stripe_publishable_key', platformSettings.stripe_publishable_key),
+      savePlatformSetting('stripe_secret_key', platformSettings.stripe_secret_key)
+    ])
+  }
+
+  const saveGeminiConfig = async () => {
+    await savePlatformSetting('gemini_api_key', platformSettings.gemini_api_key)
+  }
+
+  const addAdminUser = async () => {
+    if (!newAdminEmail || !newAdminEmail.includes('@')) {
+      alert('Please enter a valid email address')
+      return
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      const { error } = await supabase
+        .from('admin_users')
+        .insert({
+          email: newAdminEmail.toLowerCase().trim(),
+          added_by: user.id,
+          role: 'admin'
+        })
+
+      if (error) {
+        if (error.code === '23505') { // Unique constraint violation
+          alert('This email is already an admin')
+        } else {
+          throw error
+        }
+        return
+      }
+
+      alert('Admin user added successfully!')
+      setNewAdminEmail('')
+      await fetchAdminUsers()
+    } catch (error) {
+      console.error('Error adding admin user:', error)
+      alert('Failed to add admin user')
+    }
+  }
+
+  const removeAdminUser = async (adminId) => {
+    if (!confirm('Are you sure you want to remove this admin user?')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('admin_users')
+        .delete()
+        .eq('id', adminId)
+
+      if (error) throw error
+      
+      alert('Admin user removed successfully!')
+      await fetchAdminUsers()
+    } catch (error) {
+      console.error('Error removing admin user:', error)
+      alert('Failed to remove admin user')
+    }
+  }
+
+  const updateUserPlan = async (userId, newPlan) => {
+    if (!confirm(`Change user plan to ${newPlan}?`)) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({ 
+          plan_name: newPlan,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+
+      if (error) throw error
+      
+      alert('User plan updated successfully!')
+      await fetchUsers()
+    } catch (error) {
+      console.error('Error updating user plan:', error)
+      alert('Failed to update user plan')
+    }
+  }
+
+  const updateUserStatus = async (userId, newStatus) => {
+    if (!confirm(`Change user status to ${newStatus}?`)) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+
+      if (error) throw error
+      
+      alert(`User status updated to ${newStatus}!`)
+      await fetchUsers()
+    } catch (error) {
+      console.error('Error updating user status:', error)
+      alert('Failed to update user status')
+    }
+  }
+
+  const viewUserDetails = (user) => {
+    setEditingUser(user)
+  }
+
+  const saveUserChanges = async (user) => {
+    try {
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          plan_name: user.plan_name,
+          status: user.status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+
+      if (error) throw error
+      
+      alert('User updated successfully!')
+      setEditingUser(null)
+      await fetchUsers()
+    } catch (error) {
+      console.error('Error saving user changes:', error)
+      alert('Failed to save user changes')
+    }
+  }
+
+  const deleteUser = async (userId) => {
+    if (!confirm('⚠️ WARNING: This will permanently delete the user and all their data. Are you sure?')) {
+      return
+    }
+
+    const confirmText = prompt('Type "DELETE" to confirm:')
+    if (confirmText !== 'DELETE') {
+      alert('Deletion canceled')
+      return
+    }
+
+    try {
+      // This will cascade delete due to foreign key constraints
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .delete()
+        .eq('id', userId)
+
+      if (error) throw error
+      
+      alert('User deleted successfully!')
+      await fetchUsers()
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      alert('Failed to delete user. Check console for details.')
     }
   }
 
@@ -552,7 +813,44 @@ export default function SuperAdminDashboard() {
 
         {activeTab === 'users' && (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
+              <div className="flex space-x-2">
+                <button 
+                  onClick={fetchUsers}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center space-x-2"
+                >
+                  <Package className="w-4 h-4" />
+                  <span>Refresh</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-lg shadow p-4">
+                <p className="text-sm text-gray-600">Total Users</p>
+                <p className="text-2xl font-bold text-gray-900">{users.length}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <p className="text-sm text-gray-600">Active Subscriptions</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {users.filter(u => u.status === 'active' && u.plan_name !== 'free').length}
+                </p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <p className="text-sm text-gray-600">Free Users</p>
+                <p className="text-2xl font-bold text-gray-600">
+                  {users.filter(u => u.plan_name === 'free').length}
+                </p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <p className="text-sm text-gray-600">Canceled</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {users.filter(u => u.status === 'canceled').length}
+                </p>
+              </div>
+            </div>
             
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <div className="overflow-x-auto">
@@ -564,37 +862,91 @@ export default function SuperAdminDashboard() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stripe Customer</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((user) => (
-                      <tr key={user.id}>
+                      <tr key={user.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                          {user.user_id.substring(0, 12)}...
+                          <div className="flex items-center space-x-2">
+                            <span>{user.user_id.substring(0, 12)}...</span>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(user.user_id)}
+                              className="text-gray-400 hover:text-gray-600"
+                              title="Copy full ID"
+                            >
+                              📋
+                            </button>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            user.plan_name === 'pro' ? 'bg-blue-100 text-blue-800' :
-                            user.plan_name === 'team' ? 'bg-purple-100 text-purple-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {user.plan_name}
-                          </span>
+                          <select
+                            value={user.plan_name}
+                            onChange={(e) => updateUserPlan(user.id, e.target.value)}
+                            className={`px-2 py-1 text-xs font-medium rounded-full border-0 cursor-pointer ${
+                              user.plan_name === 'pro' ? 'bg-blue-100 text-blue-800' :
+                              user.plan_name === 'team' ? 'bg-purple-100 text-purple-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            <option value="free">Free</option>
+                            <option value="pro">Pro</option>
+                            <option value="team">Team</option>
+                          </select>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            user.status === 'active' ? 'bg-green-100 text-green-800' :
-                            user.status === 'canceled' ? 'bg-red-100 text-red-800' :
-                            'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {user.status}
-                          </span>
+                          <select
+                            value={user.status}
+                            onChange={(e) => updateUserStatus(user.id, e.target.value)}
+                            className={`px-2 py-1 text-xs font-medium rounded-full border-0 cursor-pointer ${
+                              user.status === 'active' ? 'bg-green-100 text-green-800' :
+                              user.status === 'canceled' ? 'bg-red-100 text-red-800' :
+                              user.status === 'blocked' ? 'bg-black text-white' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}
+                          >
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="canceled">Canceled</option>
+                            <option value="blocked">Blocked</option>
+                            <option value="past_due">Past Due</option>
+                          </select>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {user.stripe_customer_id ? user.stripe_customer_id.substring(0, 12) + '...' : 'N/A'}
+                          {user.stripe_customer_id ? (
+                            <a
+                              href={`https://dashboard.stripe.com/customers/${user.stripe_customer_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 underline"
+                            >
+                              {user.stripe_customer_id.substring(0, 12)}...
+                            </a>
+                          ) : (
+                            'N/A'
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => viewUserDetails(user)}
+                              className="text-blue-600 hover:text-blue-800"
+                              title="View Details"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => deleteUser(user.id)}
+                              className="text-red-600 hover:text-red-800"
+                              title="Delete User"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -602,6 +954,110 @@ export default function SuperAdminDashboard() {
                 </table>
               </div>
             </div>
+
+            {/* User Details Modal */}
+            {editingUser && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold">User Details</h3>
+                    <button onClick={() => setEditingUser(null)} className="text-gray-500 hover:text-gray-700">
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">User ID</label>
+                      <input
+                        type="text"
+                        value={editingUser.user_id}
+                        disabled
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono text-sm"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Plan</label>
+                        <select
+                          value={editingUser.plan_name}
+                          onChange={(e) => setEditingUser({...editingUser, plan_name: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="free">Free</option>
+                          <option value="pro">Pro</option>
+                          <option value="team">Team</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select
+                          value={editingUser.status}
+                          onChange={(e) => setEditingUser({...editingUser, status: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                        >
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                          <option value="canceled">Canceled</option>
+                          <option value="blocked">Blocked</option>
+                          <option value="past_due">Past Due</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Stripe Customer ID</label>
+                      <input
+                        type="text"
+                        value={editingUser.stripe_customer_id || ''}
+                        disabled
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Created At</label>
+                        <input
+                          type="text"
+                          value={new Date(editingUser.created_at).toLocaleString()}
+                          disabled
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Updated At</label>
+                        <input
+                          type="text"
+                          value={new Date(editingUser.updated_at).toLocaleString()}
+                          disabled
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex space-x-3 pt-4">
+                      <button
+                        onClick={() => saveUserChanges(editingUser)}
+                        className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        <Save className="w-5 h-5" />
+                        <span>Save Changes</span>
+                      </button>
+                      <button
+                        onClick={() => setEditingUser(null)}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -666,59 +1122,207 @@ export default function SuperAdminDashboard() {
             <h2 className="text-2xl font-bold text-gray-900">Platform Settings</h2>
             
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">Admin Access</h3>
-              <p className="text-gray-600 mb-4">Configure admin email addresses that can access this dashboard.</p>
-              <div className="space-y-2">
-                <input
-                  type="email"
-                  placeholder="admin@eloquent-app.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  Add Admin
-                </button>
+              <h3 className="text-lg font-semibold mb-4">Admin Access Management</h3>
+              <p className="text-gray-600 mb-4">Add admin email addresses that can access this dashboard.</p>
+              
+              <div className="space-y-4">
+                <div className="flex space-x-2">
+                  <input
+                    type="email"
+                    placeholder="admin@eloquent-app.com"
+                    value={newAdminEmail}
+                    onChange={(e) => setNewAdminEmail(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button 
+                    onClick={addAdminUser}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Admin</span>
+                  </button>
+                </div>
+
+                {/* Admin Users List */}
+                {adminUsers.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">Current Admins:</h4>
+                    <div className="space-y-2">
+                      {adminUsers.map((admin) => (
+                        <div key={admin.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{admin.email}</p>
+                            <p className="text-xs text-gray-500">
+                              Role: {admin.role} • Added: {new Date(admin.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => removeAdminUser(admin.id)}
+                            className="text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <AlertCircle className="w-4 h-4 inline mr-1" />
+                  Note: Admin users added here will have access to this dashboard. They must create an account with the specified email.
+                </p>
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">Stripe Configuration</h3>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Stripe Configuration</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    ⚠️ Recommended: Use environment variables in Netlify/Vercel instead
+                  </p>
+                </div>
+                <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                  Fallback Only
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                These database values are used as fallback. Environment variables take priority for better security.
+              </p>
+              
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Publishable Key</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Publishable Key
+                    <span className="text-xs text-gray-500 ml-2">(pk_live_... or pk_test_...)</span>
+                  </label>
                   <input
                     type="text"
                     placeholder="pk_live_..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    value={platformSettings.stripe_publishable_key}
+                    onChange={(e) => setPlatformSettings({...platformSettings, stripe_publishable_key: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Secret Key</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Secret Key
+                    <span className="text-xs text-gray-500 ml-2">(sk_live_... or sk_test_...)</span>
+                  </label>
                   <input
                     type="password"
                     placeholder="sk_live_..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    value={platformSettings.stripe_secret_key}
+                    onChange={(e) => setPlatformSettings({...platformSettings, stripe_secret_key: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  Save Configuration
+                <button 
+                  onClick={saveStripeConfig}
+                  disabled={savingSettings}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{savingSettings ? 'Saving...' : 'Save Stripe Configuration'}</span>
                 </button>
+              </div>
+
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <AlertCircle className="w-4 h-4 inline mr-1" />
+                  Current keys in .env file will be overridden by database values. Restart the app after saving.
+                </p>
               </div>
             </div>
 
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold mb-4">Gemini AI Configuration</h3>
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Gemini AI Configuration</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    ⚠️ Recommended: Use environment variables in Netlify/Vercel instead
+                  </p>
+                </div>
+                <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                  Fallback Only
+                </span>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Configure your Google Gemini AI API key for advanced speech analysis. Environment variables take priority.
+              </p>
+              
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    API Key
+                    <span className="text-xs text-gray-500 ml-2">(AIza...)</span>
+                  </label>
                   <input
                     type="password"
-                    placeholder="AIza..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    placeholder="AIzaSy..."
+                    value={platformSettings.gemini_api_key}
+                    onChange={(e) => setPlatformSettings({...platformSettings, gemini_api_key: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                  Save Configuration
+                <button 
+                  onClick={saveGeminiConfig}
+                  disabled={savingSettings}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{savingSettings ? 'Saving...' : 'Save Gemini Configuration'}</span>
                 </button>
+              </div>
+
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <AlertCircle className="w-4 h-4 inline mr-1" />
+                  Get your free Gemini API key at: <a href="https://makersuite.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a>
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold mb-4 text-blue-900">🔒 Security Best Practices</h3>
+              <div className="space-y-3 text-sm text-blue-900">
+                <div className="flex items-start space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <p><strong>Recommended:</strong> Use environment variables in Netlify/Vercel for maximum security</p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <p>Database settings are fallback only - environment variables take priority</p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <p>Never store secret keys (sk_live_...) in the database - use backend environment variables only</p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <Settings className="w-5 h-5 text-gray-600 mt-0.5 flex-shrink-0" />
+                  <p>Restart application after changing API keys for changes to take effect</p>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                <p className="text-sm font-semibold text-blue-900 mb-2">📚 How to set environment variables in Netlify:</p>
+                <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                  <li>Go to Netlify Dashboard → Your Site</li>
+                  <li>Navigate to Site Settings → Environment Variables</li>
+                  <li>Add: VITE_STRIPE_PUBLISHABLE_KEY, VITE_GEMINI_API_KEY</li>
+                  <li>Redeploy your site</li>
+                </ol>
+                <a 
+                  href="https://docs.netlify.com/environment-variables/overview/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline text-sm mt-2 inline-block"
+                >
+                  View Netlify Documentation →
+                </a>
               </div>
             </div>
           </div>

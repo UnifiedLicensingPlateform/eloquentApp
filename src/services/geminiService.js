@@ -1,14 +1,24 @@
 // Gemini AI Service for speech analysis and insights
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY
+import { getGeminiApiKey } from './platformSettingsService'
+
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent'
 
 class GeminiService {
   constructor() {
-    this.apiKey = GEMINI_API_KEY
+    this.apiKey = null
+  }
+
+  async getApiKey() {
+    if (!this.apiKey) {
+      // Try to get from database first, fallback to env variable
+      this.apiKey = await getGeminiApiKey()
+    }
+    return this.apiKey
   }
 
   async analyzeSpeechTranscript(transcript, language = 'en', analysisType = 'fluency') {
-    if (!this.apiKey) {
+    const apiKey = await this.getApiKey()
+    if (!apiKey) {
       throw new Error('Gemini API key not configured')
     }
 
@@ -20,7 +30,7 @@ class GeminiService {
     }
 
     try {
-      const response = await fetch(`${GEMINI_API_URL}?key=${this.apiKey}`, {
+      const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

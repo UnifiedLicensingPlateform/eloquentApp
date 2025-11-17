@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { LanguageProvider, useLanguage } from './hooks/useLanguage.jsx'
-import { BarChart3, Mic, MessageSquare, CreditCard, Settings, Heart } from 'lucide-react'
+import { BarChart3, Mic, MessageSquare, CreditCard, Settings, Heart, Shield } from 'lucide-react'
 import Auth from './components/Auth'
+import SimpleLandingPage from './components/SimpleLandingPage'
 import Dashboard from './components/Dashboard'
 import PracticeDrill from './components/PracticeDrill'
 import PricingPlans from './components/PricingPlans'
@@ -10,14 +11,17 @@ import SubscriptionManager from './components/SubscriptionManager'
 import AdvancedAnalytics from './components/AdvancedAnalytics'
 import SmartTextAssistant from './components/SmartTextAssistant'
 import EmotionalIntelligenceDashboard from './components/EmotionalIntelligenceDashboard'
+import SuperAdminDashboard from './components/SuperAdminDashboard'
 import SuccessPage from './components/SuccessPage'
 import LanguageSelector from './components/LanguageSelector'
+import DebugPanel from './components/DebugPanel'
 
 function AppContent() {
   const [session, setSession] = useState(null)
-  const [currentView, setCurrentView] = useState('dashboard')
+  const [currentView, setCurrentView] = useState('landing')
   const [loading, setLoading] = useState(true)
   const [userSubscription, setUserSubscription] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const { t, isRTL } = useLanguage()
 
   // Check for success page
@@ -33,6 +37,9 @@ function AppContent() {
       setSession(session)
       if (session) {
         fetchUserSubscription(session.user.id)
+        checkAdminStatus(session.user.email)
+        // Set to dashboard when user is logged in
+        setCurrentView('dashboard')
       }
       setLoading(false)
     })
@@ -43,11 +50,23 @@ function AppContent() {
       setSession(session)
       if (session) {
         fetchUserSubscription(session.user.id)
+        checkAdminStatus(session.user.email)
+        // Set to dashboard when user logs in
+        setCurrentView('dashboard')
+      } else {
+        // Reset to landing when user logs out
+        setCurrentView('landing')
+        setIsAdmin(false)
       }
     })
 
     return () => subscription.unsubscribe()
   }, [])
+
+  const checkAdminStatus = (email) => {
+    const adminEmails = ['admin@eloquent-app.com', 'superadmin@eloquent-app.com']
+    setIsAdmin(adminEmails.includes(email))
+  }
 
   const fetchUserSubscription = async (userId) => {
     try {
@@ -71,6 +90,11 @@ function AppContent() {
     )
   }
 
+  // Show landing page first, then auth
+  if (!session && currentView === 'landing') {
+    return <SimpleLandingPage />
+  }
+
   if (!session) {
     return <Auth />
   }
@@ -83,10 +107,11 @@ function AppContent() {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">E</span>
-              </div>
-              <span className="ml-3 text-xl font-bold text-gray-900">Eloquent</span>
+              <img 
+                src="/logo.png" 
+                alt="Eloquent Logo" 
+                className="h-8 w-auto"
+              />
             </div>
 
             {/* Desktop Navigation */}
@@ -97,7 +122,8 @@ function AppContent() {
                 { key: 'textassistant', label: 'Text Assistant', icon: MessageSquare },
                 { key: 'emotional', label: 'Emotional IQ', icon: Heart },
                 { key: 'pricing', label: t('nav.pricing'), icon: CreditCard },
-                { key: 'billing', label: t('nav.billing'), icon: Settings }
+                { key: 'billing', label: t('nav.billing'), icon: Settings },
+                ...(isAdmin ? [{ key: 'superadmin', label: 'Super Admin', icon: Shield }] : [])
               ].map((item) => {
                 const Icon = item.icon
                 return (
@@ -176,9 +202,13 @@ function AppContent() {
           {currentView === 'billing' && <SubscriptionManager />}
           {currentView === 'textassistant' && <SmartTextAssistant />}
           {currentView === 'emotional' && <EmotionalIntelligenceDashboard />}
+          {currentView === 'superadmin' && isAdmin && <SuperAdminDashboard />}
           {currentView === 'success' && <SuccessPage />}
         </div>
       </main>
+      
+      {/* Debug Panel - Only show in development */}
+      {window.location.hostname === 'localhost' && <DebugPanel />}
     </div>
   )
 }

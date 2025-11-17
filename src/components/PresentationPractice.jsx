@@ -76,6 +76,120 @@ export default function PresentationPractice() {
         "Show enthusiasm and confidence",
         "End with a question"
       ]
+    },
+    wedding: {
+      title: "💕 Wedding Speech",
+      duration: 240, // 4 minutes
+      structure: [
+        { phase: "Opening", time: 30, description: "Warm greeting and introduce yourself" },
+        { phase: "Story/Memory", time: 90, description: "Share a meaningful story about the couple" },
+        { phase: "Qualities", time: 60, description: "Highlight what makes them special" },
+        { phase: "Wishes", time: 45, description: "Express hopes for their future" },
+        { phase: "Toast", time: 15, description: "Invite everyone to raise their glass" }
+      ],
+      tips: [
+        "Speak from the heart with genuine emotion",
+        "Keep it appropriate for all ages",
+        "Practice emotional control - it's okay to pause",
+        "End with a memorable toast"
+      ],
+      emotionalGuidance: {
+        targetEmotion: "warm-joyful",
+        confidenceLevel: "intimate-confident",
+        energyLevel: "moderate-to-high",
+        paceGuidance: "slower-for-emotion"
+      }
+    },
+    bestman: {
+      title: "🤵 Best Man Speech",
+      duration: 300, // 5 minutes
+      structure: [
+        { phase: "Introduction", time: 30, description: "Introduce yourself and your relationship" },
+        { phase: "Groom Story", time: 90, description: "Funny/heartwarming story about the groom" },
+        { phase: "Meeting Partner", time: 60, description: "How the groom changed when they met" },
+        { phase: "Couple Together", time: 75, description: "What makes them perfect together" },
+        { phase: "Toast & Wishes", time: 45, description: "Future wishes and final toast" }
+      ],
+      tips: [
+        "Balance humor with heartfelt moments",
+        "Avoid embarrassing stories",
+        "Include the partner in your stories",
+        "Practice the emotional parts"
+      ],
+      emotionalGuidance: {
+        targetEmotion: "humorous-heartfelt",
+        confidenceLevel: "playful-confident",
+        energyLevel: "high-with-pauses",
+        paceGuidance: "vary-for-impact"
+      }
+    },
+    maidofhonor: {
+      title: "👰 Maid of Honor Speech",
+      duration: 300, // 5 minutes
+      structure: [
+        { phase: "Introduction", time: 30, description: "Introduce yourself and your friendship" },
+        { phase: "Friendship Story", time: 90, description: "Share your favorite memory together" },
+        { phase: "Partner Impact", time: 60, description: "How their partner makes them glow" },
+        { phase: "Love & Support", time: 75, description: "Express your love and support" },
+        { phase: "Toast", time: 45, description: "Beautiful wishes and toast" }
+      ],
+      tips: [
+        "Focus on the emotional connection",
+        "Share what makes your friendship special",
+        "Celebrate their love story",
+        "Don't be afraid to show emotion"
+      ],
+      emotionalGuidance: {
+        targetEmotion: "loving-celebratory",
+        confidenceLevel: "intimate-strong",
+        energyLevel: "warm-building",
+        paceGuidance: "emotional-pauses"
+      }
+    },
+    anniversary: {
+      title: "💖 Anniversary Toast",
+      duration: 120, // 2 minutes
+      structure: [
+        { phase: "Acknowledgment", time: 20, description: "Acknowledge the milestone" },
+        { phase: "Journey", time: 40, description: "Reflect on their journey together" },
+        { phase: "Admiration", time: 40, description: "Express what you admire about them" },
+        { phase: "Future", time: 20, description: "Wishes for years to come" }
+      ],
+      tips: [
+        "Keep it concise but meaningful",
+        "Focus on their enduring love",
+        "Mention specific qualities you admire",
+        "End with hope for the future"
+      ],
+      emotionalGuidance: {
+        targetEmotion: "reverent-joyful",
+        confidenceLevel: "respectful-warm",
+        energyLevel: "steady-building",
+        paceGuidance: "measured-thoughtful"
+      }
+    },
+    eulogy: {
+      title: "🕊️ Memorial Speech",
+      duration: 360, // 6 minutes
+      structure: [
+        { phase: "Opening", time: 45, description: "Gentle introduction and gratitude" },
+        { phase: "Life Celebration", time: 120, description: "Share meaningful memories and stories" },
+        { phase: "Legacy", time: 90, description: "Highlight their impact and values" },
+        { phase: "Comfort", time: 60, description: "Offer comfort and hope" },
+        { phase: "Farewell", time: 45, description: "Loving farewell and final thoughts" }
+      ],
+      tips: [
+        "Speak slowly and clearly",
+        "Focus on celebrating their life",
+        "Share specific, meaningful memories",
+        "Offer comfort to those grieving"
+      ],
+      emotionalGuidance: {
+        targetEmotion: "respectful-comforting",
+        confidenceLevel: "gentle-steady",
+        energyLevel: "calm-supportive",
+        paceGuidance: "slow-deliberate"
+      }
     }
   }
 
@@ -127,25 +241,65 @@ export default function PresentationPractice() {
         {/* Presentation Type Selection */}
         {!isRecording && (
           <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4">Choose Your Presentation Type:</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(presentationTypes).map(([key, type]) => (
-                <button
-                  key={key}
-                  onClick={() => {
-                    setPresentationMode(key)
-                    setTimeLeft(type.duration)
-                  }}
-                  className={`p-4 rounded-xl border-2 transition-all duration-300 ${
-                    presentationMode === key
-                      ? 'border-purple-500 bg-purple-50 shadow-lg'
-                      : 'border-gray-200 hover:border-purple-300'
-                  }`}
-                >
-                  <div className="text-lg mb-2">{type.title}</div>
-                  <div className="text-sm text-gray-600">{formatTime(type.duration)}</div>
-                </button>
-              ))}
+            <h3 className="text-lg font-semibold mb-6">Choose Your Speaking Scenario:</h3>
+            
+            {/* Professional Category */}
+            <div className="mb-6">
+              <h4 className="text-md font-medium text-gray-700 mb-3">💼 Professional & Business</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {['pitch', 'meeting', 'speech', 'interview'].map((key) => {
+                  const type = presentationTypes[key]
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setPresentationMode(key)
+                        setTimeLeft(type.duration)
+                      }}
+                      className={`p-3 rounded-xl border-2 transition-all duration-300 ${
+                        presentationMode === key
+                          ? 'border-blue-500 bg-blue-50 shadow-lg'
+                          : 'border-gray-200 hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="text-sm font-medium mb-1">{type.title}</div>
+                      <div className="text-xs text-gray-600">{formatTime(type.duration)}</div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Wedding & Special Events Category */}
+            <div className="mb-6">
+              <h4 className="text-md font-medium text-gray-700 mb-3">💕 Wedding & Special Events</h4>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {['wedding', 'bestman', 'maidofhonor', 'anniversary', 'eulogy'].map((key) => {
+                  const type = presentationTypes[key]
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        setPresentationMode(key)
+                        setTimeLeft(type.duration)
+                      }}
+                      className={`p-3 rounded-xl border-2 transition-all duration-300 relative ${
+                        presentationMode === key
+                          ? 'border-pink-500 bg-pink-50 shadow-lg'
+                          : 'border-gray-200 hover:border-pink-300'
+                      }`}
+                    >
+                      {['wedding', 'bestman', 'maidofhonor'].includes(key) && (
+                        <div className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-bold px-2 py-1 rounded-full animate-pulse">
+                          NEW
+                        </div>
+                      )}
+                      <div className="text-sm font-medium mb-1">{type.title}</div>
+                      <div className="text-xs text-gray-600">{formatTime(type.duration)}</div>
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           </div>
         )}
@@ -213,6 +367,20 @@ export default function PresentationPractice() {
             </div>
             <div className="text-lg font-bold text-green-800 mb-1">{getCurrentPhase().phase}</div>
             <div className="text-sm text-green-700">{getCurrentPhase().description}</div>
+            
+            {/* Emotional Guidance for Wedding Speeches */}
+            {['wedding', 'bestman', 'maidofhonor', 'anniversary', 'eulogy'].includes(presentationMode) && (
+              <div className="mt-3 p-3 bg-pink-50 rounded-lg border border-pink-200">
+                <div className="text-xs font-medium text-pink-800 mb-1">💕 EMOTIONAL GUIDANCE:</div>
+                <div className="text-sm text-pink-700">
+                  {presentationMode === 'wedding' && "Speak with warmth and genuine joy. Let your love for them shine through."}
+                  {presentationMode === 'bestman' && "Balance humor with heartfelt emotion. It's okay to pause if you get emotional."}
+                  {presentationMode === 'maidofhonor' && "Share from your heart. Your friendship is beautiful - let that emotion flow."}
+                  {presentationMode === 'anniversary' && "Speak with reverence for their journey. Celebrate their enduring love."}
+                  {presentationMode === 'eulogy' && "Speak slowly and gently. Focus on celebrating their life and offering comfort."}
+                </div>
+              </div>
+            )}
             
             {/* Progress bar */}
             <div className="mt-3 w-full bg-green-200 rounded-full h-2">

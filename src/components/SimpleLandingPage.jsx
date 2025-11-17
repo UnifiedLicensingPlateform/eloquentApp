@@ -1,6 +1,14 @@
-import { Heart, Mic, Brain, TrendingUp, Shield, ArrowRight, CheckCircle, Star, Globe, Briefcase, Presentation, Play, Sparkles, Users, MessageCircle, BarChart3, Zap, Award, FileText, Chrome, Smartphone, Target, BookOpen, PenTool } from 'lucide-react'
+import { useState } from 'react'
+import { Heart, Mic, Brain, TrendingUp, Shield, ArrowRight, CheckCircle, Star, Globe, Briefcase, Presentation, Play, Sparkles, Chrome, FileText, PenTool, Users, Target } from 'lucide-react'
+import Auth from './Auth'
 
-export default function LandingPage({ onGetStarted }) {
+export default function SimpleLandingPage() {
+  const [showAuth, setShowAuth] = useState(false)
+
+  if (showAuth) {
+    return <Auth onBack={() => setShowAuth(false)} />
+  }
+
   const coreFeatures = [
     {
       icon: Heart,
@@ -55,24 +63,51 @@ export default function LandingPage({ onGetStarted }) {
   const practiceModesFeatures = [
     {
       icon: Briefcase,
-      title: "Job Interview Simulation",
-      description: "Master the STAR method with AI-powered interview coaching",
+      title: "Job Interview Mastery",
+      description: "Master the STAR method with structured 2-minute practice sessions",
       color: "from-emerald-500 to-teal-500",
-      badge: "NEW"
-    },
-    {
-      icon: Heart,
-      title: "Wedding Speech Practice",
-      description: "Perfect your emotional tone for life's special moments",
-      color: "from-rose-500 to-pink-500",
-      badge: "NEW"
+      badge: "LIVE",
+      details: ["STAR method coaching", "2-minute structured format", "Confidence tracking", "Real-time feedback"]
     },
     {
       icon: Presentation,
-      title: "Conference Talk Preparation",
-      description: "Technical presentation skills for professional success",
+      title: "Business Presentations",
+      description: "Perfect your pitches, meetings, and professional presentations",
       color: "from-blue-500 to-indigo-500",
-      badge: "NEW"
+      badge: "PRO",
+      details: ["5-min business pitches", "Team meeting practice", "10-min public speeches", "Real-time analysis"]
+    },
+    {
+      icon: Brain,
+      title: "Guided Topic Practice",
+      description: "Structured practice across 6 different conversation categories",
+      color: "from-purple-500 to-indigo-500",
+      badge: "POPULAR",
+      details: ["Business & Professional", "Personal Development", "Social & Relationships", "Creative & Hobbies"]
+    },
+    {
+      icon: Target,
+      title: "Structured Speaking",
+      description: "Learn proper speech organization with intro-body-conclusion format",
+      color: "from-orange-500 to-red-500",
+      badge: "FOUNDATION",
+      details: ["Introduction techniques", "Supporting details", "Strong conclusions", "Time management"]
+    },
+    {
+      icon: Heart,
+      title: "Wedding & Special Events",
+      description: "Master life's most important moments with emotional guidance",
+      color: "from-rose-500 to-pink-500",
+      badge: "VIRAL",
+      details: ["Wedding speeches", "Best man/Maid of honor", "Anniversary toasts", "Memorial speeches"]
+    },
+    {
+      icon: Sparkles,
+      title: "Free Speaking Practice",
+      description: "60-second sessions to practice spontaneous speaking on any topic",
+      color: "from-cyan-500 to-blue-500",
+      badge: "STARTER",
+      details: ["60-second sessions", "Any topic freedom", "Word repetition analysis", "Fluency scoring"]
     }
   ]
 
@@ -112,9 +147,11 @@ export default function LandingPage({ onGetStarted }) {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
             <div className="flex items-center justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Heart className="w-8 h-8 text-white" />
-              </div>
+              <img 
+                src="/logo.png" 
+                alt="Eloquent Logo" 
+                className="h-16 w-auto drop-shadow-lg"
+              />
             </div>
 
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
@@ -127,7 +164,7 @@ export default function LandingPage({ onGetStarted }) {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
               <button
-                onClick={onGetStarted}
+                onClick={() => setShowAuth(true)}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center"
               >
                 Start Your Journey
@@ -171,24 +208,28 @@ export default function LandingPage({ onGetStarted }) {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {coreFeatures.map((feature, index) => {
               const Icon = feature.icon
               return (
-                <div key={index} className="text-center group">
-                  <div className={`w-20 h-20 rounded-2xl flex items-center justify-center bg-gradient-to-r ${feature.color} mx-auto mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-10 h-10 text-white" />
+                <div key={index} className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 group">
+                  <div className="flex items-start space-x-6">
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-r ${feature.color} group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
+                      <Icon className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                      <p className="text-gray-600 mb-4">{feature.description}</p>
+                      <ul className="space-y-2">
+                        {feature.details.map((detail, idx) => (
+                          <li key={idx} className="flex items-center text-sm text-gray-700">
+                            <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" />
+                            {detail}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 text-sm mb-4">{feature.description}</p>
-                  <ul className="space-y-1 text-left">
-                    {feature.details.slice(0, 2).map((detail, idx) => (
-                      <li key={idx} className="flex items-center text-xs text-gray-700">
-                        <CheckCircle className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
-                        {detail}
-                      </li>
-                    ))}
-                  </ul>
                 </div>
               )
             })}
@@ -242,7 +283,7 @@ export default function LandingPage({ onGetStarted }) {
                     <span className="text-white/80 text-xs">LIVE ANALYSIS</span>
                   </div>
                 </div>
-
+                
                 <div className="bg-white rounded-lg p-4 mb-4">
                   <p className="text-gray-800 text-sm mb-2">
                     "I think this is a <span className="bg-yellow-200">good</span> idea and I really think it's <span className="bg-yellow-200">good</span> for our team..."
@@ -252,7 +293,7 @@ export default function LandingPage({ onGetStarted }) {
                     <button className="bg-blue-600 text-white px-3 py-1 rounded text-xs">Improve</button>
                   </div>
                 </div>
-
+                
                 <div className="bg-green-100 rounded-lg p-4">
                   <p className="text-gray-800 text-sm mb-2">
                     "I believe this is an <span className="bg-green-200">excellent</span> idea and I genuinely think it's <span className="bg-green-200">beneficial</span> for our team..."
@@ -290,278 +331,57 @@ export default function LandingPage({ onGetStarted }) {
               <span className="text-blue-800 font-medium text-sm">SPECIALIZED COACHING</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Master Every Speaking Scenario
+              Master Every Communication Scenario That Matters
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              AI coaching tailored to specific real-world situations with methodology guidance
+            <p className="text-xl text-gray-600 max-w-4xl mx-auto">
+              From career-defining interviews to viral content creation - AI coaching for every situation where your words can change everything
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 mb-16">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
             {practiceModesFeatures.map((mode, index) => {
               const Icon = mode.icon
               return (
-                <div key={index} className="relative bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 group">
+                <div key={index} className="relative bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group">
                   {mode.badge && (
-                    <div className="absolute -top-3 -right-3 bg-gradient-to-r from-orange-400 to-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    <div className={`absolute -top-3 -right-3 ${
+                      mode.badge === '🔥' ? 'bg-gradient-to-r from-red-500 to-orange-500' :
+                      mode.badge === 'VIRAL' ? 'bg-gradient-to-r from-pink-500 to-purple-500' :
+                      mode.badge === 'HOT' ? 'bg-gradient-to-r from-orange-500 to-red-500' :
+                      mode.badge === 'TRENDING' ? 'bg-gradient-to-r from-cyan-500 to-blue-500' :
+                      mode.badge === 'ELITE' ? 'bg-gradient-to-r from-purple-600 to-indigo-600' :
+                      'bg-gradient-to-r from-blue-500 to-purple-500'
+                    } text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse`}>
                       {mode.badge}
                     </div>
                   )}
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-gradient-to-r ${mode.color} mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon className="w-8 h-8 text-white" />
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-r ${mode.color} mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                    <Icon className="w-7 h-7 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{mode.title}</h3>
-                  <p className="text-gray-600 mb-6">{mode.description}</p>
-                  <button className="flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-colors">
-                    Try Now <ArrowRight className="w-4 h-4 ml-2" />
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{mode.title}</h3>
+                  <p className="text-gray-600 text-sm mb-4">{mode.description}</p>
+                  
+                  {mode.details && (
+                    <ul className="space-y-1 mb-4">
+                      {mode.details.slice(0, 2).map((detail, idx) => (
+                        <li key={idx} className="flex items-center text-xs text-gray-600">
+                          <CheckCircle className="w-3 h-3 text-green-500 mr-2 flex-shrink-0" />
+                          {detail}
+                        </li>
+                      ))}
+                      <li className="text-xs text-gray-500 italic">+{mode.details.length - 2} more scenarios</li>
+                    </ul>
+                  )}
+                  
+                  <button 
+                    onClick={() => setShowAuth(true)}
+                    className="flex items-center text-blue-600 font-semibold hover:text-blue-700 transition-colors text-sm"
+                  >
+                    Master This <ArrowRight className="w-3 h-3 ml-1" />
                   </button>
                 </div>
               )
             })}
-          </div>
-
-          {/* Demo Video Section */}
-          <div className="bg-white rounded-3xl p-8 shadow-xl">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                  See Emotional Intelligence in Action
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Watch how our AI analyzes confidence, energy, and anxiety in real-time during practice sessions
-                </p>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-center text-gray-700">
-                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    Real-time confidence tracking
-                  </li>
-                  <li className="flex items-center text-gray-700">
-                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    STAR method coaching
-                  </li>
-                  <li className="flex items-center text-gray-700">
-                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    Anxiety detection & calming tips
-                  </li>
-                  <li className="flex items-center text-gray-700">
-                    <CheckCircle className="w-5 h-5 text-green-500 mr-3" />
-                    Energy & enthusiasm analysis
-                  </li>
-                </ul>
-                <button
-                  onClick={onGetStarted}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200"
-                >
-                  Start Free Trial
-                </button>
-              </div>
-
-              <div className="relative">
-                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 shadow-2xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-white font-semibold">Interview Simulation</h4>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                      <span className="text-white/80 text-xs">LIVE</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl p-4 mb-4">
-                    <p className="text-white/90 text-sm mb-2">
-                      "Tell me about a time you overcame a challenge..."
-                    </p>
-                    <div className="flex items-center justify-center bg-white/10 rounded-lg py-8">
-                      <Play className="w-12 h-12 text-white/60" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <div className="text-white/80 text-xs mb-1">Confidence</div>
-                      <div className="text-white font-bold">92%</div>
-                    </div>
-                    <div className="bg-white/10 rounded-lg p-3">
-                      <div className="text-white/80 text-xs mb-1">Energy</div>
-                      <div className="text-green-400 font-bold">High ⚡</div>
-                    </div>
-                  </div>
-
-                  <div className="bg-green-500/20 rounded-lg p-3">
-                    <div className="text-green-400 text-xs mb-1">AI FEEDBACK</div>
-                    <div className="text-white text-sm">Great STAR structure! Your confidence is engaging.</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Plans Preview */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Choose Your Communication Journey
-            </h2>
-            <p className="text-xl text-gray-600">
-              From individual improvement to team transformation
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {[
-              {
-                name: "Free",
-                price: "$0",
-                period: "forever",
-                features: [
-                  "10 practice sessions/month",
-                  "Basic speech analysis",
-                  "Text assistant (10 improvements/day)",
-                  "Progress tracking"
-                ],
-                color: "from-gray-500 to-gray-600",
-                popular: false
-              },
-              {
-                name: "Pro",
-                price: "$9",
-                period: "per month",
-                features: [
-                  "Unlimited practice sessions",
-                  "🎭 Emotional Intelligence coaching",
-                  "Unlimited text improvements",
-                  "All practice modes (Interview, Wedding, Conference)",
-                  "Advanced analytics",
-                  "Multi-language support"
-                ],
-                color: "from-blue-600 to-purple-600",
-                popular: true
-              },
-              {
-                name: "Team",
-                price: "$29",
-                period: "per month",
-                features: [
-                  "Everything in Pro",
-                  "Up to 10 team members",
-                  "Team analytics dashboard",
-                  "Bulk user management",
-                  "Advanced reporting",
-                  "Priority support"
-                ],
-                color: "from-emerald-500 to-teal-600",
-                popular: false
-              }
-            ].map((plan, index) => (
-              <div key={index} className={`relative bg-white rounded-2xl p-8 shadow-lg ${plan.popular ? 'ring-2 ring-blue-500 scale-105' : ''}`}>
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                      Most Popular
-                    </div>
-                  </div>
-                )}
-
-                <div className="text-center mb-8">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                  <div className="flex items-baseline justify-center mb-2">
-                    <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                    <span className="text-gray-600 ml-2">/{plan.period}</span>
-                  </div>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center text-sm text-gray-700">
-                      <CheckCircle className="w-4 h-4 text-green-500 mr-3 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={onGetStarted}
-                  className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${plan.popular
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg'
-                    : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
-                    }`}
-                >
-                  {plan.name === 'Free' ? 'Get Started' : 'Start Free Trial'}
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Success Stories */}
-      <section className="py-20 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Real Results from Real People
-            </h2>
-            <p className="text-xl text-gray-600">
-              See how our comprehensive communication coaching transforms careers and confidence
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: "Sarah Chen",
-                role: "Software Engineer",
-                scenario: "Job Interview + Email Writing",
-                improvement: "95% confidence boost",
-                content: "The STAR method coaching helped me ace my interview, and the text assistant makes my emails so much more professional. I got the job!",
-                rating: 5,
-                avatar: "👩‍💻"
-              },
-              {
-                name: "Michael Torres",
-                role: "Best Man",
-                scenario: "Wedding Speech + Social Media",
-                improvement: "Anxiety reduced by 80%",
-                content: "From terrified of public speaking to delivering a heartfelt speech. The text assistant also helps me write better LinkedIn posts.",
-                rating: 5,
-                avatar: "🤵"
-              },
-              {
-                name: "Dr. Lisa Park",
-                role: "Research Scientist",
-                scenario: "Conference Talk + Research Writing",
-                improvement: "Audience engagement +60%",
-                content: "My presentations are now engaging stories, and my research papers are clearer thanks to the writing assistant. Complete game-changer!",
-                rating: 5,
-                avatar: "👩‍🔬"
-              }
-            ].map((story, index) => (
-              <div key={index} className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group">
-                <div className="flex items-center mb-4">
-                  <div className="text-3xl mr-3">{story.avatar}</div>
-                  <div>
-                    <div className="font-semibold text-gray-900">{story.name}</div>
-                    <div className="text-gray-600 text-sm">{story.role}</div>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3 mb-4">
-                  <div className="text-xs font-medium text-blue-800 mb-1">USE CASE</div>
-                  <div className="font-semibold text-gray-900 text-sm">{story.scenario}</div>
-                  <div className="text-sm text-green-600 font-medium">{story.improvement}</div>
-                </div>
-
-                <div className="flex items-center mb-3">
-                  {[...Array(story.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-
-                <p className="text-gray-700 italic text-sm">"{story.content}"</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>
@@ -575,21 +395,21 @@ export default function LandingPage({ onGetStarted }) {
           <p className="text-xl text-blue-100 mb-8">
             Join thousands who've mastered both speech and writing with our comprehensive AI coaching platform
           </p>
-
+          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
-              onClick={onGetStarted}
+              onClick={() => setShowAuth(true)}
               className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center"
             >
               Start Free Trial
               <ArrowRight className="w-5 h-5 ml-2" />
             </button>
-
+            
             <button className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all duration-200">
               View All Features
             </button>
           </div>
-
+          
           <p className="text-blue-100 text-sm mt-4">
             No credit card required • 7-day free trial • Cancel anytime
           </p>
@@ -602,16 +422,17 @@ export default function LandingPage({ onGetStarted }) {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">E</span>
-                </div>
-                <span className="ml-3 text-xl font-bold">Eloquent</span>
+                <img 
+                  src="/logo.png" 
+                  alt="Eloquent Logo" 
+                  className="h-8 w-auto"
+                />
               </div>
               <p className="text-gray-400">
                 The complete communication improvement platform. Master speech and writing with AI-powered coaching.
               </p>
             </div>
-
+            
             <div>
               <h4 className="font-semibold mb-4">Speech Features</h4>
               <ul className="space-y-2 text-gray-400">
@@ -621,7 +442,7 @@ export default function LandingPage({ onGetStarted }) {
                 <li>Progress Tracking</li>
               </ul>
             </div>
-
+            
             <div>
               <h4 className="font-semibold mb-4">Writing Features</h4>
               <ul className="space-y-2 text-gray-400">
@@ -631,7 +452,7 @@ export default function LandingPage({ onGetStarted }) {
                 <li>Real-time Analysis</li>
               </ul>
             </div>
-
+            
             <div>
               <h4 className="font-semibold mb-4">Support</h4>
               <ul className="space-y-2 text-gray-400">
@@ -642,7 +463,7 @@ export default function LandingPage({ onGetStarted }) {
               </ul>
             </div>
           </div>
-
+          
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
             <p>&copy; 2024 Eloquent. All rights reserved.</p>
           </div>

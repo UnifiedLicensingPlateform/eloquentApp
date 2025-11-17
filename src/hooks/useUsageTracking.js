@@ -60,18 +60,45 @@ export function useUsageTracking() {
       let hasEIAccess = false
       let hasAdvancedEI = false
       
-      if (subData?.plan_name === 'pro') {
+      console.log('🔍 Debug - Subscription data:', subData)
+      console.log('🔍 Debug - Plan name:', subData?.plan_name)
+      console.log('🔍 Debug - Status:', subData?.status)
+      
+      if (subData?.plan_name === 'pro' && subData?.status === 'active') {
         sessionsLimit = 999999 // Unlimited
         hasEIAccess = true
         hasAdvancedEI = false
-      } else if (subData?.plan_name === 'team') {
+        console.log('✅ Pro plan activated - EI access granted')
+      } else if (subData?.plan_name === 'team' && subData?.status === 'active') {
         sessionsLimit = 999999 // Unlimited
         hasEIAccess = true
         hasAdvancedEI = true
+        console.log('✅ Team plan activated - Advanced EI access granted')
+      } else {
+        console.log('❌ Free plan or inactive subscription - EI access denied')
       }
 
       const sessionsUsed = usageData?.sessions_used || 0
       const canCreateSession = sessionsUsed < sessionsLimit
+
+      // TEMPORARY: Manual override for testing (remove in production)
+      const isTestingMode = window.location.hostname === 'localhost'
+      if (isTestingMode) {
+        console.log('🧪 Testing mode - Granting EI access for development')
+        hasEIAccess = true
+        hasAdvancedEI = true
+        sessionsLimit = 999999
+      }
+
+      console.log('📊 Final usage state:', {
+        sessionsUsed,
+        sessionsLimit,
+        canCreateSession,
+        hasEIAccess,
+        hasAdvancedEI,
+        planName: subData?.plan_name,
+        status: subData?.status
+      })
 
       setUsage({
         sessionsUsed,

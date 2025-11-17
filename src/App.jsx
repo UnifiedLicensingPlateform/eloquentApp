@@ -64,7 +64,9 @@ function AppContent() {
   }, [])
 
   const checkAdminStatus = (email) => {
-    const adminEmails = ['admin@eloquent-app.com', 'superadmin@eloquent-app.com']
+    // Get admin emails from environment variable or use defaults
+    const adminEmailsEnv = import.meta.env.VITE_ADMIN_EMAILS || 'admin@eloquent-app.com,superadmin@eloquent-app.com'
+    const adminEmails = adminEmailsEnv.split(',').map(e => e.trim())
     setIsAdmin(adminEmails.includes(email))
   }
 
